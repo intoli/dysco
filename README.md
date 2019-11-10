@@ -17,12 +17,11 @@ poetry install
 
 to install the project dependencies.
 
-The library is tested against Python versions 3.6, 3.7, and 3.8.
+The library is tested against Python versions 3.7 and 3.8.
 These are most easily installed using [pyenv](https://github.com/pyenv/pyenv#installation) with the following command.
 
 ```bash
 # Install the supported Python versions.
-pyenv install --skip-existing 3.6.9
 pyenv install --skip-existing 3.7.5
 pyenv install --skip-existing 3.8.0
 ```

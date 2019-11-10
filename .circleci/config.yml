@@ -137,60 +137,6 @@ jobs:
           path: dist/docs
           destination: documentation
 
-  build-3.6:
-    <<: *defaults
-    docker:
-      - image: circleci/python:3.6.9-stretch
-
-    steps:
-      - checkout
-      - restore_cache:
-          keys:
-            - dysco-python-3.6-{{ .Branch }}-{{ .Revision }}
-            - dysco-python-3.6-{{ .Branch }}-
-            - dysco-python-3.6
-      - run:
-          name: Run Tests and Build
-          no_output_timeout: 60m
-          command: |
-            virtualenv .venv
-            . .venv/bin/activate
-            pip install tox
-            tox -e py36
-      - save_cache:
-          key: dysco-python-3.6-{{ .Branch }}-{{ .Revision }}
-          paths:
-            - .tox
-            - .venv
-
-      - run:
-          name: Lint
-          no_output_timeout: 60m
-          command: |
-            . .venv/bin/activate
-            tox -e py36-lint
-
-      - run:
-          name: Test
-          no_output_timeout: 60m
-          command: |
-            . .venv/bin/activate
-            tox -e py36-test
-
-      - run:
-          name: Docs
-          no_output_timeout: 60m
-          command: |
-            . .venv/bin/activate
-            tox -e py36-docs
-
-      - store_artifacts:
-          path: htmlcov
-          destination: coverage-report
-
-      - store_artifacts:
-          path: dist/docs
-          destination: documentation
 
 workflows:
   version: 2
@@ -199,4 +145,3 @@ workflows:
     jobs:
       - build-3.8
       - build-3.7
-      - build-3.6
