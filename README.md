@@ -41,6 +41,6 @@ tox -e py38-lint
 # Run the tests and generate a coverage report.
 tox -e py38-test --coverage
 
-## Building the project documentation.
+## Build the project documentation.
 tox -e py38-docs
 ```
