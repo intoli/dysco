@@ -1,2 +1,21 @@
-# The project virtual environment.
+# The project virtual environments.
+.tox/
 .venv/
+
+# Test coverage reports.
+.coverage
+htmlcov/
+
+# Documentation build files.
+docs/reference/
+
+# The mypy cache.
+.mypy_cache/
+
+# Distribution and packaging.
+*.egg-info/
+
+# Byte-compiled / optimized / DLL files.
+__pycache__/
+*.py[cod]
+*$py.class
