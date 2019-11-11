@@ -1,3 +1,5 @@
+import pytest
+
 from dysco import g
 
 
@@ -14,13 +16,18 @@ def test_scope_isolation():
 
     def test_first():
         g.first *= -1
+        g.third = 3
 
     def test_second():
         g.second *= -1
+        with pytest.raises(AttributeError):
+            _ = g.third
 
     test_first()
     assert g.first == -1
     assert g.second == 2
+    with pytest.raises(AttributeError):
+        _ = g.third
 
     test_second()
     assert g.first == -1
