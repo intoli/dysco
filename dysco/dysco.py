@@ -6,8 +6,7 @@ from dysco.scope import Scope, find_parent_scope
 
 
 class Dysco:
-    def __init__(self, namespace: str = '', read_only: bool = False):
-        self.__namespace = namespace
+    def __init__(self, read_only: bool = False):
         self.__read_only = read_only
 
     def __getattr__(self, attribute: str) -> Any:
@@ -16,7 +15,7 @@ class Dysco:
         stack = inspect.stack()
         current_frame = stack.pop(0).frame
         try:
-            scope = Scope(stack[0].frame, namespace=self.__namespace)
+            scope = Scope(stack[0].frame, namespace=hex(id(self)))
             while scope:
                 if attribute in scope.variables:
                     return scope.variables[attribute]
@@ -33,7 +32,7 @@ class Dysco:
         stack = inspect.stack()
         current_frame = stack.pop(0).frame
         try:
-            initial_scope = Scope(stack[0].frame, namespace=self.__namespace)
+            initial_scope = Scope(stack[0].frame, namespace=hex(id(self)))
             scope = initial_scope
             while not read_only and scope:
                 if attribute in scope.variables:
