@@ -1,4 +1,34 @@
-# Dysco
+![Dysco](https://github.com/intoli/dysco/raw/master/media/dysco.png)
+
+<h1 vertical-align="middle">Dysco - Dynamic Scoping in Python
+    <a targe="_blank" href="https://twitter.com/share?url=https%3A%2F%2Fgithub.com%2Fintoli%2Fdysco%2F&text=Dysco%20-%20Configurable%20dynamic%20scoping%20for%20Python">
+        <img height="26px" src="https://simplesharebuttons.com/images/somacro/twitter.png"
+ +          alt="Tweet"></a>
+    <a target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=https%3A//github.com/intoli/dysco">
+        <img height="26px" src="https://simplesharebuttons.com/images/somacro/facebook.png"
+            alt="Share on Facebook"></a>
+    <a target="_blank" href="http://reddit.com/submit?url=https%3A%2F%2Fgithub.com%2Fintoli%2Fdysco%2F&title=Dysco%20%E2%80%94%20Configurable%20dynamic%20scoping%20for%20Python">
+        <img height="26px" src="https://simplesharebuttons.com/images/somacro/reddit.png"
+            alt="Share on Reddit"></a>
+    <a target="_blank" href="https://news.ycombinator.com/submitlink?u=https://github.com/intoli/dysco&t=Dysco%20%E2%80%94%20Configurable%20dynamic%20scoping%20for%20Python">
+        <img height="26px" src="https://github.com/intoli/dysco/raw/master/media/ycombinator.png"
+            alt="Share on Hacker News"></a>
+</h1>
+
+<p align="left">
+    <a href="https://circleci.com/gh/intoli/dysco/tree/master">
+        <img src="https://img.shields.io/circleci/project/github/intoli/dysco/master.svg"
+            alt="Build Status"></a>
+    <a href="https://circleci.intoli.com/artifacts/intoli/dysco/coverage-report/index.html">
+        <img src="https://img.shields.io/badge/dynamic/json.svg?label=coverage&colorB=ff69b4&query=$.coverage&uri=https://circleci.intoli.com/artifacts/intoli/dysco/coverage-report/total-coverage.json"
+          alt="Coverage"></a>
+    <a href="https://github.com/intoli/dysco/blob/master/LICENSE.md">
+        <img src="https://img.shields.io/pypi/l/dysco.svg"
+            alt="License"></a>
+    <a href="https://pypi.python.org/pypi/dysco/">
+        <img src="https://img.shields.io/pypi/v/dysco.svg"
+            alt="PyPI Version"></a>
+</p>
 
 
 ## Development
