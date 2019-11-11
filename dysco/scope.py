@@ -23,7 +23,7 @@ def construct_name(frame: FrameType, namespace: str = '') -> str:
     if namespace:
         # Slugify limits characters to those matching the `[^-a-zA-Z0-9]+` regex.
         name += slugify(namespace).replace('-', '_') + '_'
-    name += hex(id(frame))
+    name += hex(id(frame.f_locals))
     return name
 
 
@@ -33,7 +33,7 @@ def destructor(frame_id: int, name: str):
 
 
 def find_existing_scope(frame: FrameType, namespace: str = '') -> Optional['Scope']:
-    name_set = name_sets_by_frame_id.get(id(frame), set())
+    name_set = name_sets_by_frame_id.get(id(frame.f_locals), set())
     for name in name_set:
         candidate_scope = scopes_by_name.get(name)
         if candidate_scope:
@@ -64,10 +64,10 @@ class Scope:
 
         scopes_by_name[self.name] = self
         frame.f_locals[self.name] = self
-        name_set = name_sets_by_frame_id.get(id(frame), set())
+        name_set = name_sets_by_frame_id.get(id(frame.f_locals), set())
         name_set.add(self.name)
-        name_sets_by_frame_id[id(frame)] = name_set
-        weakref.finalize(self, destructor, id(frame), self.name)
+        name_sets_by_frame_id[id(frame.f_locals)] = name_set
+        weakref.finalize(self, destructor, id(frame.f_locals), self.name)
 
     def __new__(cls, frame: FrameType, namespace: str = ''):
         # Attempt to find an existing scope for this frame.
