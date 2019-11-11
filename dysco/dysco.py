@@ -1,13 +1,8 @@
 """Houses the implementation of the main ``Dysco`` class and project API."""
-from __future__ import annotations
-
 import inspect
-from typing import TYPE_CHECKING
+from typing import Any
 
 from dysco.scope import Scope, find_parent_scope
-
-if TYPE_CHECKING:
-    from typing import Any
 
 
 class Dysco:

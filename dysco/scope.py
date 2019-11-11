@@ -1,20 +1,20 @@
-from __future__ import annotations
-
 import weakref
-from typing import TYPE_CHECKING
+from inspect import FrameInfo
+from types import FrameType
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set
 from weakref import WeakValueDictionary
 
 from slugify import slugify
 
+Stack = List[FrameInfo]
+
 if TYPE_CHECKING:
-    from inspect import FrameInfo
-    from typing import Any, Dict, List, Optional, Set
-    from types import FrameType
-
-    Stack = List[FrameInfo]
+    ScopesByName = WeakValueDictionary[str, 'Scope']
+else:
+    ScopesByName = WeakValueDictionary
 
 
-scopes_by_name: WeakValueDictionary[str, Scope] = WeakValueDictionary()
+scopes_by_name: ScopesByName = WeakValueDictionary()
 name_sets_by_frame_id: Dict[int, Set[str]] = {}
 
 
@@ -32,7 +32,7 @@ def destructor(frame_id: int, name: str):
     name_set.remove(name)
 
 
-def find_existing_scope(frame: FrameType, namespace: str = '') -> Optional[Scope]:
+def find_existing_scope(frame: FrameType, namespace: str = '') -> Optional['Scope']:
     name_set = name_sets_by_frame_id.get(id(frame), set())
     for name in name_set:
         candidate_scope = scopes_by_name.get(name)
@@ -43,7 +43,7 @@ def find_existing_scope(frame: FrameType, namespace: str = '') -> Optional[Scope
     return None
 
 
-def find_parent_scope(scope: Scope, stack: Stack):
+def find_parent_scope(scope: 'Scope', stack: Stack):
     for i, frame_info in enumerate(stack):
         parent_scope = find_existing_scope(frame_info.frame, scope.namespace)
         if parent_scope and parent_scope is not scope:
