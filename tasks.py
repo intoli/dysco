@@ -11,6 +11,12 @@ root_directory = os.path.dirname(os.path.realpath(__file__))
 
 
 @task()
+def build(c):
+    """Build the package using poetry."""
+    c.run('poetry build')
+
+
+@task()
 def docs(c):
     """Generate the project documentation."""
     c.run('rm -rf docs/reference/')
@@ -29,9 +35,11 @@ def docs(c):
         'commit': 'Specifies whether to commit the changes.',
         'tag': 'Specifies whether to tag the version (implies --commit).',
         'deploy': 'Specifies whether to deploy the library (implies --tag).',
-    }
+    },
+    pre=['lint', 'test', 'build'],
 )
 def bump(c, part, commit=True, tag=True, deploy=True):
+    """Bump the project version and optionally deploy the package."""
     current_version = dysco.__version__
     major, minor, patch = map(int, current_version.split('.'))
     if part == 'major':
@@ -85,7 +93,7 @@ def bump(c, part, commit=True, tag=True, deploy=True):
         c.run('git push --tags')
 
     if deploy:
-        c.run('poetry publish --build', echo=True, pty=True)
+        c.run('poetry publish', echo=True, pty=True)
 
 
 @task(
