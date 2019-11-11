@@ -32,6 +32,8 @@
 
 ###### [Installation](#installation) | [Development](#development) | [Contributing](#contributing)
 
+> Dysco is a lightweight Python library that brings [dynamic scoping](https://en.wikipedia.org/wiki/Scope_(computer_science)#Dynamic_scoping) capabilities to Python in a highly configurable way.
+
 
 ## Installation
 
