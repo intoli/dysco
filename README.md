@@ -89,3 +89,12 @@ You can then use invoke to bump the version number, commit the changes, tag the 
 # Valid options are major, minor, and patch.
 invoke bump patch
 ```
+
+## Contributing
+
+Contributions are welcome, but please follow these contributor guidelines outlined in [CONTRIBUTING.md](CONTRIBUTING.md).
+
+
+## License
+
+Exodus is licensed under a [BSD 2-Clause License](LICENSE.md) and is copyright [Intoli, LLC](https://intoli.com).
