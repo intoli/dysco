@@ -1,5 +1,13 @@
 """Task definitions for use with ``invoke``."""
+import os
+import re
+
 from invoke import task
+from invoke.exceptions import ParseError
+
+import dysco
+
+root_directory = os.path.dirname(os.path.realpath(__file__))
 
 
 @task()
@@ -11,6 +19,43 @@ def docs(c):
     c.run('sphinx-build -E -b doctest docs dist/docs')
     c.run('sphinx-build -E -b html docs dist/docs')
     c.run('sphinx-build -b linkcheck docs dist/docs')
+
+
+@task(help={'part': 'Whether to bump the major, minor, or patch portion of the version number.'})
+def bump(c, part):
+    current_version = dysco.__version__
+    major, minor, patch = map(int, current_version.split('.'))
+    if part == 'major':
+        major += 1
+    elif part == 'minor':
+        minor += 1
+    elif part == 'patch':
+        patch += 1
+    else:
+        raise ParseError(f'The "part" argument must be one of major, minor, or patch.')
+    new_version = f'{major}.{minor}.{patch}'
+
+    # Update the version in `__init__.py`.
+    path = os.path.join(root_directory, 'dysco', '__init__.py')
+    with open(path, 'r') as f:
+        lines = f.readlines()
+    lines = [
+        re.sub(f'__version__ = \'{current_version}\'', f'__version__ = \'{new_version}\'', line)
+        for line in lines
+    ]
+    with open(path, 'w') as f:
+        f.write(''.join(lines))
+
+    # Update the version in `pyproject.toml`.
+    path = os.path.join(root_directory, 'pyproject.toml')
+    with open(path, 'r') as f:
+        lines = f.readlines()
+    lines = [
+        re.sub(f'version = "{current_version}"', f'version = "{new_version}"', line)
+        for line in lines
+    ]
+    with open(path, 'w') as f:
+        f.write(''.join(lines))
 
 
 @task(
