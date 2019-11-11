@@ -3,7 +3,7 @@ import os
 import re
 
 from invoke import task
-from invoke.exceptions import ParseError
+from invoke.exceptions import Exit, ParseError
 
 import dysco
 
@@ -43,6 +43,12 @@ def bump(c, part, commit=True, tag=True, deploy=True):
     else:
         raise ParseError(f'The "part" argument must be one of major, minor, or patch.')
     new_version = f'{major}.{minor}.{patch}'
+
+    # Check that the project is clean.
+    result = c.run('git diff --name-only')
+    changed_file_count = len(result.stdout.split('\n')) - 1
+    if changed_file_count > 0:
+        raise Exit(f'All files tracked in git must be clean, {changed_file_count} were dirty.')
 
     # Update the version in `__init__.py`.
     path = os.path.join(root_directory, 'dysco', '__init__.py')
