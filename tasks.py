@@ -21,8 +21,17 @@ def docs(c):
     c.run('sphinx-build -b linkcheck docs dist/docs')
 
 
-@task(help={'part': 'Whether to bump the major, minor, or patch portion of the version number.'})
-def bump(c, part):
+@task(
+    help={
+        'part': (
+            'Specifies whether to bump the major, minor, or patch portion of the version number.'
+        ),
+        'commit': 'Specifies whether to commit the changes.',
+        'tag': 'Specifies whether to tag the version (implies --commit).',
+        'deploy': 'Specifies whether to deploy the library (implies --tag).',
+    }
+)
+def bump(c, part, commit=True, tag=True, deploy=True):
     current_version = dysco.__version__
     major, minor, patch = map(int, current_version.split('.'))
     if part == 'major':
@@ -56,6 +65,21 @@ def bump(c, part):
     ]
     with open(path, 'w') as f:
         f.write(''.join(lines))
+
+    # Commit the changes.
+    if commit or tag or deploy:
+        c.run('git add pyproject.toml', echo=True)
+        c.run('git add dysco/__init__.py', echo=True)
+        c.run(f'git commit -m "Bump the project version to v{new_version}."', echo=True)
+        c.run('git push', echo=True)
+
+    # Tag the version.
+    if tag or deploy:
+        c.run(f'git tag -a v{new_version}', echo=True, pty=True)
+        c.run('git push --tags')
+
+    if deploy:
+        c.run('poetry publish --build', echo=True, pty=True)
 
 
 @task(

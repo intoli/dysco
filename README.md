@@ -43,3 +43,19 @@ tox -e py38-test --coverage
 ## Build the project documentation.
 tox -e py38-docs
 ```
+
+## Deployment
+
+You first need to configure your credentials with poetry.
+
+```bash
+poetry config http-basic.pypi intoli <pypi-password>
+```
+
+You can then use invoke to bump the version number, commit the changes, tag the version, and deploy to pypi.
+
+```bash
+# Bumps the patch version and deploys the package.
+# Valid options are major, minor, and patch.
+invoke bump patch
+```
