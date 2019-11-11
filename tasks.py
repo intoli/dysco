@@ -125,4 +125,4 @@ def bump(c, part, commit=True, tag=True, deploy=True):
         c.run('git push --tags')
 
     if deploy:
-        c.run('poetry publish', echo=True, pty=True)
+        c.run('poetry publish --build', echo=True, pty=True)
