@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "dysco"
-version = "0.0.3"
+version = "0.0.4"
 description = "Dysco provides configurable dynamic scoping behavior in Python."
 authors = ["Evan Sangaline <evan@intoli.com>"]
 license = "BSD-2-Clause"
