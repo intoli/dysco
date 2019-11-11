@@ -7,7 +7,7 @@ To install the dependencies locally, you need [poetry](https://poetry.eustace.io
 You can then run
 
 ```bash
-# This is optional, but highly recommended.
+# This is only required if you're not using poetry v1.0.0 or greater.
 # It tells poetry to place the virtual environment in `.venv`.
 poetry config settings.virtualenvs.in-project true
 
