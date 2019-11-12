@@ -40,7 +40,11 @@
 Dysco can be installed from [pypy](https://pypi.org/project/dysco/) using `pip` or any compatible Python package manager.
 
 ```bash
+# Installation with pip.
 pip install dysco
+
+# Or, installation with poetry.
+poetry add dysco
 ```
 
 ## Development
