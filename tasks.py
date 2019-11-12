@@ -76,8 +76,11 @@ def bump(c, part, commit=True, tag=True, deploy=True):
     major, minor, patch = map(int, current_version.split('.'))
     if part == 'major':
         major += 1
+        minor = 0
+        patch = 0
     elif part == 'minor':
         minor += 1
+        patch = 0
     elif part == 'patch':
         patch += 1
     else:
