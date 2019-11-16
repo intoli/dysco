@@ -3,6 +3,12 @@ import pytest
 from dysco import Dysco, g
 
 
+def test_contains():
+    assert 'hi' not in g
+    g['hi'] = True
+    assert 'hi' in g
+
+
 def test_item_tuple_access():
     g[(1, 'hi')] = True
     assert g[(1, 'hi')] == True

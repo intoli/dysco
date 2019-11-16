@@ -12,6 +12,21 @@ class Dysco:
         self.__stacklevel = stacklevel
         self.__stacklevel_lock = Lock()
 
+    def __contains__(self, key: Hashable) -> bool:
+        try:
+            current_frame = inspect.currentframe()
+            self.__stacklevel_lock.acquire()
+            self.__stacklevel += 1
+            self[key]
+            return True
+        except KeyError:
+            return False
+        finally:
+            self.__stacklevel -= 1
+            self.__stacklevel_lock.release()
+            # Delete the current frame to avoid reference cycles.
+            del current_frame
+
     def __getattr__(self, attribute: str) -> Any:
         if attribute.startswith('_Dysco_'):
             return super().__getattribute__(attribute)
