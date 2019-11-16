@@ -63,13 +63,12 @@ class Dysco:
         stack = inspect.stack()
         current_frame = stack[0].frame
         stack = stack[self.__stacklevel :]
-        key_value_pairs: List[Tuple[Hashable, Any]] = []
         try:
             scope = Scope(stack[0].frame, namespace=hex(id(self)))
             while scope:
-                key_value_pairs += scope.variables.items()
+                for key_value_pair in scope.variables.items():
+                    yield key_value_pair
                 scope, stack = find_parent_scope(scope, stack)
-            return iter(key_value_pairs)
         finally:
             # Delete the current frame to avoid reference cycles.
             del current_frame
