@@ -3,7 +3,12 @@ import pytest
 from dysco import g
 
 
-def test_item_access():
+def test_item_tuple_access():
+    g[(1, 'hi')] = True
+    assert g[(1, 'hi')] == True
+
+
+def test_item_attribute_interoperability():
     g.hello = 1
     assert g['hello'] == 1
     g['hello'] = 2
