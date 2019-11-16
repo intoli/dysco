@@ -1,6 +1,6 @@
 import pytest
 
-from dysco import g
+from dysco import Dysco, g
 
 
 def test_item_tuple_access():
@@ -50,3 +50,23 @@ def test_scope_isolation():
     test_second()
     assert g.first == 1
     assert g.second == 2
+
+
+def test_stacklevel_option():
+    dysco = Dysco(stacklevel=2)
+
+    def set(key, value):
+        dysco[key] = value
+
+    def nested_set(key, value):
+        set(key, value)
+
+    def get(key):
+        return dysco[key]
+
+    set('a', 1)
+    assert get('a') == 1
+
+    nested_set('b', 1)
+    with pytest.raises(KeyError):
+        get('b')
