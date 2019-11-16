@@ -1,3 +1,5 @@
+from sys import version_info
+
 import pytest
 
 from dysco import Dysco, g
@@ -18,6 +20,18 @@ def test_hasattr():
 def test_item_tuple_access():
     g[(1, 'hi')] = True
     assert g[(1, 'hi')] == True
+
+
+def test_dict_conversion():
+    g.set_in_outer = 1
+
+    def test_inner():
+        g.set_in_inner = 2
+        assert dict(g) == {'set_in_inner': 2, 'set_in_outer': 1}
+        if version_info[0] > 3 or version_info[1] >= 7:
+            assert (
+                dict(g).keys()[0] == 'set_in_inner'
+            ), 'Variables set in lower scopes should be ordered first.'
 
 
 def test_item_attribute_interoperability():
