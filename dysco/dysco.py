@@ -1,7 +1,7 @@
 """Houses the implementation of the main ``Dysco`` class and project API."""
 import inspect
 from threading import Lock
-from typing import Any, Hashable
+from typing import Any, Hashable, Iterator, List, Tuple
 
 from dysco.scope import Scope, find_parent_scope
 
@@ -55,6 +55,21 @@ class Dysco:
                     return scope.variables[key]
                 scope, stack = find_parent_scope(scope, stack)
             raise KeyError(f'The key "{key}" was not found in any scope.')
+        finally:
+            # Delete the current frame to avoid reference cycles.
+            del current_frame
+
+    def __iter__(self) -> Iterator[Tuple[Hashable, Any]]:
+        stack = inspect.stack()
+        current_frame = stack[0].frame
+        stack = stack[self.__stacklevel :]
+        key_value_pairs: List[Tuple[Hashable, Any]] = []
+        try:
+            scope = Scope(stack[0].frame, namespace=hex(id(self)))
+            while scope:
+                key_value_pairs += scope.variables.items()
+                scope, stack = find_parent_scope(scope, stack)
+            return iter(key_value_pairs)
         finally:
             # Delete the current frame to avoid reference cycles.
             del current_frame
