@@ -11,17 +11,6 @@ def test_contains():
     assert 'hi' in g
 
 
-def test_hasattr():
-    assert not hasattr(g, 'hi')
-    g['hi'] = True
-    assert hasattr(g, 'hi')
-
-
-def test_item_tuple_access():
-    g[(1, 'hi')] = True
-    assert g[(1, 'hi')] == True
-
-
 def test_dict_conversion():
     g.set_in_outer = 1
 
@@ -32,6 +21,17 @@ def test_dict_conversion():
             assert (
                 dict(g).keys()[0] == 'set_in_inner'
             ), 'Variables set in lower scopes should be ordered first.'
+
+
+def test_hasattr():
+    assert not hasattr(g, 'hi')
+    g['hi'] = True
+    assert hasattr(g, 'hi')
+
+
+def test_item_tuple_access():
+    g[(1, 'hi')] = True
+    assert g[(1, 'hi')] == True
 
 
 def test_item_attribute_interoperability():
