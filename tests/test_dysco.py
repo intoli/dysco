@@ -51,8 +51,10 @@ def test_dict_conversion():
         assert dict(g) == {'set_in_inner': 2, 'set_in_outer': 1}
         if version_info[0] > 3 or version_info[1] >= 7:
             assert (
-                dict(g).keys()[0] == 'set_in_inner'
+                list(dict(g).keys())[0] == 'set_in_inner'
             ), 'Variables set in lower scopes should be ordered first.'
+
+    test_inner()
 
 
 def test_hasattr():
