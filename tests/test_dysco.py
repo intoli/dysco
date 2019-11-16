@@ -11,6 +11,20 @@ def test_contains():
     assert 'hi' in g
 
 
+def test_deleting_attributes():
+    g.something = 1
+    assert hasattr(g, 'something')
+    delattr(g, 'something')
+    assert not hasattr(g, 'something')
+
+
+def test_deleting_items():
+    g['something'] = 1
+    assert 'something' in g
+    del g['something']
+    assert 'something' not in g
+
+
 def test_dict_conversion():
     g.set_in_outer = 1
 

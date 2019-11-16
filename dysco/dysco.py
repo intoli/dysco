@@ -27,6 +27,39 @@ class Dysco:
             # Delete the current frame to avoid reference cycles.
             del current_frame
 
+    def __delattr__(self, attribute: str):
+        if attribute.startswith('_Dysco_'):
+            return super().__getattribute__(attribute)
+
+        try:
+            current_frame = inspect.currentframe()
+            self.__stacklevel_lock.acquire()
+            self.__stacklevel += 1
+            del self[attribute]
+        except KeyError:
+            raise AttributeError(f'The attribute {attribute} was not found in any scope.')
+        finally:
+            self.__stacklevel -= 1
+            self.__stacklevel_lock.release()
+            # Delete the current frame to avoid reference cycles.
+            del current_frame
+
+    def __delitem__(self, key: Hashable):
+        stack = inspect.stack()
+        current_frame = stack[0].frame
+        stack = stack[self.__stacklevel :]
+        try:
+            scope = Scope(stack[0].frame, namespace=hex(id(self)))
+            while scope:
+                if key in scope.variables:
+                    del scope.variables[key]
+                    return
+                scope, stack = find_parent_scope(scope, stack)
+            raise KeyError(f'The key "{key}" was not found in any scope.')
+        finally:
+            # Delete the current frame to avoid reference cycles.
+            del current_frame
+
     def __getattr__(self, attribute: str) -> Any:
         if attribute.startswith('_Dysco_'):
             return super().__getattribute__(attribute)
