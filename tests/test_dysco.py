@@ -3,6 +3,14 @@ import pytest
 from dysco import g
 
 
+def test_item_access():
+    g.hello = 1
+    assert g['hello'] == 1
+    g['hello'] = 2
+    assert g['hello'] == 2
+    assert g.hello == 2
+
+
 def test_scope_in_loops():
     g.hello = -1
     for i in range(20):
