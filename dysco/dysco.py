@@ -129,14 +129,13 @@ class Dysco:
             del current_frame
 
     def __setitem__(self, key: str, value: Any) -> None:
-        read_only = getattr(self, '_Dysco_read_only', False)
         stack = inspect.stack()
         current_frame = stack[0].frame
         stack = stack[self.__stacklevel :]
         try:
             initial_scope = Scope(stack[0].frame, namespace=hex(id(self)))
             scope = initial_scope
-            while not read_only and scope:
+            while not self.__read_only and scope:
                 if key in scope.variables:
                     scope.variables[key] = value
                     return
