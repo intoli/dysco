@@ -25,6 +25,24 @@ def test_deleting_items():
     assert 'something' not in g
 
 
+def test_deleting_items_in_readonly_mode():
+    # It should work fine in the same scope.
+    dysco = Dysco(read_only=True)
+    dysco['something'] = 1
+    assert 'something' in dysco
+    del dysco['something']
+    assert 'something' not in dysco
+
+    dysco['something'] = 1
+
+    def delete_in_inner_scope():
+        del dysco['something']
+
+    with pytest.raises(KeyError):
+        delete_in_inner_scope()
+    assert 'something' in dysco
+
+
 def test_dict_conversion():
     g.set_in_outer = 1
 

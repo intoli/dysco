@@ -36,8 +36,8 @@ class Dysco:
             self.__stacklevel_lock.acquire()
             self.__stacklevel += 1
             del self[attribute]
-        except KeyError:
-            raise AttributeError(f'The attribute {attribute} was not found in any scope.')
+        except KeyError as key_error:
+            raise AttributeError(key_error.args[0].replace('key', 'attribute', count=1))
         finally:
             self.__stacklevel -= 1
             self.__stacklevel_lock.release()
@@ -49,10 +49,16 @@ class Dysco:
         current_frame = stack[0].frame
         stack = stack[self.__stacklevel :]
         try:
-            scope = Scope(stack[0].frame, namespace=hex(id(self)))
+            initial_scope = Scope(stack[0].frame, namespace=hex(id(self)))
+            scope = initial_scope
             while scope:
                 if key in scope.variables:
-                    del scope.variables[key]
+                    if self.__read_only and scope is not initial_scope:
+                        raise KeyError(
+                            f'The key "{key}" is defined in a higher scope, but is read-only.'
+                        )
+                    else:
+                        del scope.variables[key]
                     return
                 scope, stack = find_parent_scope(scope, stack)
             raise KeyError(f'The key "{key}" was not found in any scope.')
