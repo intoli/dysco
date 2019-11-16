@@ -1,7 +1,7 @@
 """Houses the implementation of the main ``Dysco`` class and project API."""
 import inspect
 from threading import Lock
-from typing import Any, Hashable, Iterator, List, Tuple
+from typing import Any, Hashable, Iterator, Tuple
 
 from dysco.scope import Scope, find_parent_scope
 
