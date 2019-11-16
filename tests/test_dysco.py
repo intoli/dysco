@@ -43,6 +43,14 @@ def test_deleting_items_in_readonly_mode():
     assert 'something' in dysco
 
 
+def test_deleting_private_attributes():
+    dysco = Dysco(read_only=True)
+    assert dysco._Dysco__read_only == True
+    del dysco._Dysco__read_only
+    with pytest.raises(AttributeError):
+        dysco.__read_only
+
+
 def test_dict_conversion():
     g.set_in_outer = 1
 
