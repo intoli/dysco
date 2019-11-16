@@ -1,7 +1,7 @@
 import weakref
 from inspect import FrameInfo
 from types import FrameType
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set
+from typing import TYPE_CHECKING, Any, Dict, Hashable, List, Optional, Set
 from weakref import WeakValueDictionary
 
 from slugify import slugify
@@ -60,7 +60,7 @@ class Scope:
 
         self.name = construct_name(frame, namespace)
         self.namespace = namespace
-        self.variables: Dict[str, Any] = {}
+        self.variables: Dict[Hashable, Any] = {}
 
         scopes_by_name[self.name] = self
         frame.f_locals[self.name] = self
