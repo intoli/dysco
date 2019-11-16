@@ -9,6 +9,12 @@ def test_contains():
     assert 'hi' in g
 
 
+def test_hasattr():
+    assert not hasattr(g, 'hi')
+    g['hi'] = True
+    assert hasattr(g, 'hi')
+
+
 def test_item_tuple_access():
     g[(1, 'hi')] = True
     assert g[(1, 'hi')] == True
