@@ -29,7 +29,7 @@ class Dysco:
 
     def __delattr__(self, attribute: str):
         if attribute.startswith('_Dysco_'):
-            return super().__getattribute__(attribute)
+            return super().__delattr__(attribute)
 
         try:
             current_frame = inspect.currentframe()
