@@ -1,5 +1,6 @@
 """Houses the implementation of the main ``Dysco`` class and project API."""
 import inspect
+from threading import Lock
 from typing import Any, Hashable
 
 from dysco.scope import Scope, find_parent_scope
@@ -9,6 +10,7 @@ class Dysco:
     def __init__(self, read_only: bool = False, stacklevel: int = 1):
         self.__read_only = read_only
         self.__stacklevel = stacklevel
+        self.__stacklevel_lock = Lock()
 
     def __getattr__(self, attribute: str) -> Any:
         if attribute.startswith('_Dysco_'):
@@ -16,12 +18,14 @@ class Dysco:
 
         try:
             current_frame = inspect.currentframe()
+            self.__stacklevel_lock.acquire()
             self.__stacklevel += 1
             return self[attribute]
         except KeyError:
             raise AttributeError(f'The attribute {attribute} was not found in any scope.')
         finally:
             self.__stacklevel -= 1
+            self.__stacklevel_lock.release()
             # Delete the current frame to avoid reference cycles.
             del current_frame
 
@@ -47,10 +51,12 @@ class Dysco:
 
         try:
             current_frame = inspect.currentframe()
+            self.__stacklevel_lock.acquire()
             self.__stacklevel += 1
             self[attribute] = value
         finally:
             self.__stacklevel -= 1
+            self.__stacklevel_lock.release()
             # Delete the current frame to avoid reference cycles.
             del current_frame
 
