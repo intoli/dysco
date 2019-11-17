@@ -2,7 +2,7 @@ import re
 import weakref
 from inspect import FrameInfo
 from types import FrameType
-from typing import TYPE_CHECKING, Any, Dict, Hashable, List, Optional, Set, Tuple
+from typing import TYPE_CHECKING, Any, Dict, Hashable, List, Optional, Set
 from weakref import WeakValueDictionary
 
 Stack = List[FrameInfo]
