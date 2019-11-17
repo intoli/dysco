@@ -23,7 +23,6 @@ include = [
 
 [tool.poetry.dependencies]
 python = "^3.6"
-python-slugify = "^4.0"
 
 [tool.poetry.dev-dependencies]
 black = {version = "^18.3-alpha.0", allow-prereleases = true}
