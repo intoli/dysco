@@ -22,10 +22,25 @@ class Dysco:
         self.__stacklevel_lock = Lock()
 
     def __call__(
-        self, readonly: Optional[bool] = None, stacklevel: Optional[int] = None
+        self,
+        readonly: Optional[bool] = None,
+        shadow: Optional[bool] = None,
+        stacklevel: Optional[int] = None,
     ) -> 'Dysco':
+        if readonly and shadow:
+            raise ValueError(
+                'Only one of the "readonly" and "shadow" options can be used at the same time.'
+            )
+
         # Override the options if necessary, and construct a new instance with them.
-        readonly = self.__readonly if readonly is None else readonly
+        if readonly or shadow:
+            # Allow enabling one of these options without raising a value error in the init method.
+            readonly = bool(readonly)
+            shadow = not readonly
+        else:
+            # Otherwise pass through the existing values if new ones weren't given.
+            readonly = self.__readonly if readonly is None else readonly
+            shadow = self.__shadow if shadow is None else shadow
         stacklevel = self.__stacklevel if stacklevel is None else stacklevel
         dysco = Dysco(readonly=readonly, stacklevel=stacklevel)
 
