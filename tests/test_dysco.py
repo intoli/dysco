@@ -6,6 +6,21 @@ import pytest
 from dysco import Dysco, g
 
 
+@pytest.mark.asyncio
+async def test_async_functions():
+    g.value = 1
+
+    async def test_inner():
+        assert g.value == 1
+        g.value = 2
+        g.inner_value = 3
+
+    await test_inner()
+    with pytest.raises(AttributeError):
+        g.inner_value
+    assert g.value == 2
+
+
 def test_contains():
     assert 'hi' not in g
     g['hi'] = True
