@@ -1,4 +1,5 @@
 """Task definitions for use with ``invoke``."""
+import json
 import os
 import re
 
@@ -53,8 +54,16 @@ def test(c, coverage=False):
     """Run the dysco test suite."""
     if coverage:
         c.run('pytest --cov --cov-report=term-missing -vv')
-        c.run('coverage report')
+        report_result = c.run('coverage report')
         c.run('coverage html')
+
+        # Find the coverage percentage and write it to a JSON file.
+        for report_line in report_result.stdout.split('\n')[::-1]:
+            if report_line.startswith('TOTAL'):
+                total_coverage = report_line.strip().split()[-1]
+                with open(os.path.join('htmlcov', 'total-coverage.json'), 'w') as f:
+                    json.dump({'coverage': total_coverage}, f)
+                break
     else:
         c.run('pytest')
 
