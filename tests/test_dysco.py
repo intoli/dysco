@@ -105,6 +105,21 @@ def test_pickling_fails():
         pickle.dumps(g)
 
 
+def test_read_only_option():
+    dysco = Dysco(read_only=True)
+    dysco.value = 1
+
+    def check_access():
+        dysco.inner_value = 2
+        with pytest.raises(AttributeError):
+            dysco.value = 3
+
+    check_access()
+
+    assert dysco.value == 1
+    assert 'inner_value' not in dysco
+
+
 def test_scope_in_loops():
     g.hello = -1
     for i in range(20):

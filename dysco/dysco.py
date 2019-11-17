@@ -126,6 +126,8 @@ class Dysco:
             self.__stacklevel_lock.acquire()
             self.__stacklevel += 1
             self[attribute] = value
+        except KeyError as key_error:
+            raise AttributeError(key_error.args[0].replace('key', 'attribute', 1))
         finally:
             self.__stacklevel -= 1
             self.__stacklevel_lock.release()
@@ -139,9 +141,15 @@ class Dysco:
         try:
             initial_scope = Scope(stack[0].frame, namespace=hex(id(self)))
             scope = initial_scope
-            while not self.__read_only and scope:
+            while scope:
                 if key in scope.variables:
-                    scope.variables[key] = value
+                    if scope is initial_scope or not self.__read_only:
+                        print('Setting', key, scope, initial_scope)
+                        scope.variables[key] = value
+                    else:
+                        raise KeyError(
+                            f'The key "{key}" is defined in a higher scope, but is read-only.'
+                        )
                     return
                 scope, stack = find_parent_scope(scope, stack)
             initial_scope.variables[key] = value
