@@ -43,7 +43,7 @@ def test_deleting_items():
 
 def test_deleting_items_in_readonly_mode():
     # It should work fine in the same scope.
-    dysco = Dysco(read_only=True)
+    dysco = Dysco(readonly=True)
     dysco['something'] = 1
     assert 'something' in dysco
     del dysco['something']
@@ -60,11 +60,11 @@ def test_deleting_items_in_readonly_mode():
 
 
 def test_deleting_private_attributes():
-    dysco = Dysco(read_only=True)
-    assert dysco._Dysco__read_only == True
-    del dysco._Dysco__read_only
+    dysco = Dysco(readonly=True)
+    assert dysco._Dysco__readonly == True
+    del dysco._Dysco__readonly
     with pytest.raises(AttributeError):
-        dysco.__read_only
+        dysco.__readonly
 
 
 def test_dict_conversion():
@@ -105,8 +105,8 @@ def test_pickling_fails():
         pickle.dumps(g)
 
 
-def test_read_only_option():
-    dysco = Dysco(read_only=True)
+def test_readonly_option():
+    dysco = Dysco(readonly=True)
     dysco.value = 1
 
     def check_access():
@@ -158,7 +158,7 @@ def test_scope_isolation():
 
 def test_shadow_option():
     with pytest.raises(ValueError):
-        dysco = Dysco(read_only=True, shadow=True)
+        dysco = Dysco(readonly=True, shadow=True)
 
     dysco = Dysco(shadow=True)
     dysco.value = 1

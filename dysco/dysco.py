@@ -8,13 +8,13 @@ from dysco.scope import Scope, find_parent_scope
 
 
 class Dysco:
-    def __init__(self, read_only: bool = False, shadow: bool = False, stacklevel: int = 1):
-        if read_only and shadow:
+    def __init__(self, readonly: bool = False, shadow: bool = False, stacklevel: int = 1):
+        if readonly and shadow:
             raise ValueError(
-                'Only one of the "read_only" and "shadow" options can be used at the same time.'
+                'Only one of the "readonly" and "shadow" options can be used at the same time.'
             )
 
-        self.__read_only = read_only
+        self.__readonly = readonly
         self.__shadow = shadow
         self.__stacklevel = stacklevel
         self.__stacklevel_lock = Lock()
@@ -60,7 +60,7 @@ class Dysco:
             scope = initial_scope
             while scope:
                 if key in scope.variables:
-                    if self.__read_only and scope is not initial_scope:
+                    if self.__readonly and scope is not initial_scope:
                         raise KeyError(
                             f'The key "{key}" is defined in a higher scope, but is read-only.'
                         )
@@ -145,11 +145,11 @@ class Dysco:
         current_frame = stack[0].frame
         stack = stack[self.__stacklevel :]
         try:
-            initial_scope = Scope(stack[0].frame, namespace=hex(id(self)))
+            initial_scope = Scope(stack[0].frame, namespace=self.__namespace)
             scope = initial_scope
             while scope and not self.__shadow:
                 if key in scope.variables:
-                    if scope is initial_scope or not self.__read_only:
+                    if scope is initial_scope or not self.__readonly:
                         scope.variables[key] = value
                     else:
                         raise KeyError(
