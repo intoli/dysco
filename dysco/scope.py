@@ -18,7 +18,7 @@ name_sets_by_frame_id: Dict[int, Set[str]] = {}
 
 
 def construct_name(frame: FrameType, namespace: str = '') -> str:
-    name: str = '_dysco_'
+    name: str = '_Dysco__'
     if namespace:
         name += re.sub(r'[^_a-zA-Z0-9]+', '_', namespace)
     name += hex(id(frame.f_locals))
