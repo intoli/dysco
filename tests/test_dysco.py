@@ -161,6 +161,13 @@ def test_item_attribute_interoperability():
     assert g.hello == 2
 
 
+def test_keyword_only_initialization():
+    with pytest.raises(TypeError):
+        Dysco(True)
+    with pytest.raises(TypeError):
+        g(lambda: None, True)
+
+
 def test_pickling_fails():
     with pytest.raises(pickle.PickleError):
         pickle.dumps(g)

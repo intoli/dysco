@@ -9,7 +9,7 @@ from dysco.scope import Scope, find_parent_scope
 
 
 class Dysco:
-    def __init__(self, readonly: bool = False, shadow: bool = False, stacklevel: int = 1):
+    def __init__(self, *, readonly: bool = False, shadow: bool = False, stacklevel: int = 1):
         if readonly and shadow:
             raise ValueError(
                 'Only one of the "readonly" and "shadow" options can be used at the same time.'
