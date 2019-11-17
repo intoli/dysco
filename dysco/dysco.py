@@ -1,14 +1,15 @@
 """Houses the implementation of the main ``Dysco`` class and project API."""
+import functools
 import inspect
 from pickle import PickleError
 from threading import Lock
-from typing import Any, Hashable, Iterator, Optional, Tuple
+from typing import Any, Callable, Hashable, Iterator, Optional, Tuple, Union
 
 from dysco.scope import Scope, find_parent_scope
 
 
 class Dysco:
-    def __init__(self, readonly: bool = False, shadow: bool = False, stacklevel: int = 1):
+    def __init__(self, *, readonly: bool = False, shadow: bool = False, stacklevel: int = 1):
         if readonly and shadow:
             raise ValueError(
                 'Only one of the "readonly" and "shadow" options can be used at the same time.'
@@ -23,14 +24,32 @@ class Dysco:
 
     def __call__(
         self,
+        function: Optional[Callable] = None,
+        *,
         readonly: Optional[bool] = None,
         shadow: Optional[bool] = None,
         stacklevel: Optional[int] = None,
-    ) -> 'Dysco':
+    ) -> Union[Callable, 'Dysco']:
         if readonly and shadow:
             raise ValueError(
                 'Only one of the "readonly" and "shadow" options can be used at the same time.'
             )
+
+        # Handle behaving like a decorator.
+        if function:
+            if inspect.iscoroutinefunction(function):
+
+                @functools.wraps(function)
+                async def wrapper(*args, **kwargs):
+                    return await function(self, *args, **kwargs)
+
+            else:
+
+                @functools.wraps(function)
+                def wrapper(*args, **kwargs):
+                    return function(self, *args, **kwargs)
+
+            return wrapper
 
         # Override the options if necessary, and construct a new instance with them.
         if readonly or shadow:

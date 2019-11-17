@@ -21,6 +21,41 @@ async def test_async_functions():
     assert g.value == 2
 
 
+def test_calling_dysco_as_a_decorator():
+    g.value = 1
+
+    @g(readonly=True)
+    def check_access(g, arg, kwarg):
+        assert arg == 'arg'
+        assert kwarg == 'kwarg'
+        g.inner_value = 2
+        with pytest.raises(AttributeError):
+            g.value = 3
+        assert g.inner_value == 2
+
+    check_access(arg='arg', kwarg='kwarg')
+    assert g.value == 1
+    assert 'inner_value' not in g
+
+
+@pytest.mark.asyncio
+async def test_calling_dysco_as_a_decorator_on_an_async_function():
+    g.value = 1
+
+    @g(readonly=True)
+    async def check_access(g, arg, kwarg):
+        assert arg == 'arg'
+        assert kwarg == 'kwarg'
+        g.inner_value = 2
+        with pytest.raises(AttributeError):
+            g.value = 3
+        assert g.inner_value == 2
+
+    await check_access(arg='arg', kwarg='kwarg')
+    assert g.value == 1
+    assert 'inner_value' not in g
+
+
 def test_calling_dysco_to_create_a_variant():
     g.value = 1
     readonly_g = g(readonly=True)
@@ -124,6 +159,13 @@ def test_item_attribute_interoperability():
     g['hello'] = 2
     assert g['hello'] == 2
     assert g.hello == 2
+
+
+def test_keyword_only_initialization():
+    with pytest.raises(TypeError):
+        Dysco(True)
+    with pytest.raises(TypeError):
+        g(lambda: None, True)
 
 
 def test_pickling_fails():
