@@ -106,6 +106,12 @@ You can then use invoke to bump the version number, commit the changes, tag the 
 invoke bump patch
 ```
 
+## Versioning
+
+The Dysco library will use [semantic versioning](https://semver.org/) once the version reaches version 0.1.0.
+Until then, you can expect breaking changes in the patch version.
+
+
 ## Contributing
 
 Contributions are welcome, but please follow these contributor guidelines outlined in [CONTRIBUTING.md](CONTRIBUTING.md).
