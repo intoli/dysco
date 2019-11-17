@@ -1,3 +1,4 @@
+import pickle
 from sys import version_info
 
 import pytest
@@ -82,6 +83,11 @@ def test_item_attribute_interoperability():
     g['hello'] = 2
     assert g['hello'] == 2
     assert g.hello == 2
+
+
+def test_pickling_fails():
+    with pytest.raises(pickle.PickleError):
+        pickle.dumps(g)
 
 
 def test_scope_in_loops():
