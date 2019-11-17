@@ -1,10 +1,9 @@
+import re
 import weakref
 from inspect import FrameInfo
 from types import FrameType
 from typing import TYPE_CHECKING, Any, Dict, Hashable, List, Optional, Set
 from weakref import WeakValueDictionary
-
-from slugify import slugify
 
 Stack = List[FrameInfo]
 
@@ -19,10 +18,9 @@ name_sets_by_frame_id: Dict[int, Set[str]] = {}
 
 
 def construct_name(frame: FrameType, namespace: str = '') -> str:
-    name: str = '_dysco_'
+    name: str = '_Dysco__'
     if namespace:
-        # Slugify limits characters to those matching the `[^-a-zA-Z0-9]+` regex.
-        name += slugify(namespace).replace('-', '_') + '_'
+        name += re.sub(r'[^_a-zA-Z0-9]+', '_', namespace)
     name += hex(id(frame.f_locals))
     return name
 
