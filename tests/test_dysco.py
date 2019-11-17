@@ -156,6 +156,27 @@ def test_scope_isolation():
     assert g.second == 2
 
 
+def test_shadow_option():
+    with pytest.raises(ValueError):
+        dysco = Dysco(read_only=True, shadow=True)
+
+    dysco = Dysco(shadow=True)
+    dysco.value = 1
+
+    def check_access():
+        dysco.value = 2
+
+        def inner_check_access():
+            assert dysco.value == 2
+            dysco.value = 3
+
+        inner_check_access()
+        assert dysco.value == 2
+
+    check_access()
+    assert dysco.value == 1
+
+
 def test_stacklevel_option():
     dysco = Dysco(stacklevel=2)
 
