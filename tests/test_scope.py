@@ -4,6 +4,15 @@ import inspect
 from dysco.scope import Scope, find_parent_scope, scopes_by_name
 
 
+def test_f_local_keys_are_tuples():
+    frame = inspect.stack()[0].frame
+    assert not any(isinstance(key, tuple) for key in frame.f_locals.keys())
+    Scope(frame)
+    [name_tuple] = [key for key in frame.f_locals.keys() if isinstance(key, tuple)]
+    assert len(name_tuple) == 1
+    assert name_tuple[0].startswith('_Dysco__')
+
+
 def test_namespaces_produce_new_scopes():
     frame = inspect.stack()[0].frame
     old_scope = Scope(frame)

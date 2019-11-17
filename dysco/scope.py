@@ -35,7 +35,7 @@ def find_existing_scope(frame: FrameType, namespace: str = '') -> Optional['Scop
     for name in name_set:
         candidate_scope = scopes_by_name.get(name)
         if candidate_scope:
-            frame_scope = frame.f_locals.get(candidate_scope.name)
+            frame_scope = frame.f_locals.get(candidate_scope.name_tuple)  # type: ignore
             if candidate_scope is frame_scope and namespace == candidate_scope.namespace:
                 return candidate_scope
     return None
@@ -57,11 +57,12 @@ class Scope:
         self.initialized = True
 
         self.name = construct_name(frame, namespace)
+        self.name_tuple = (self.name,)
         self.namespace = namespace
         self.variables: Dict[Hashable, Any] = {}
 
         scopes_by_name[self.name] = self
-        frame.f_locals[self.name] = self
+        frame.f_locals[self.name_tuple] = self  # type: ignore
         name_set = name_sets_by_frame_id.get(id(frame.f_locals), set())
         name_set.add(self.name)
         name_sets_by_frame_id[id(frame.f_locals)] = name_set
