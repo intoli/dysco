@@ -9,7 +9,13 @@ homepage = "https://github.com/intoli/dysco/"
 repository = "https://github.com/intoli/dysco/"
 keywords = ["dynamic scope"]
 classifiers = [
-  "Topic :: Software Development :: Libraries"
+  'Development Status :: 3 - Alpha',
+  'License :: OSI Approved :: BSD License',
+  'Programming Language :: Python :: 3.6',
+  'Programming Language :: Python :: 3.7',
+  'Programming Language :: Python :: 3.8',
+  'Programming Language :: Python :: Implementation :: CPython',
+  "Topic :: Software Development :: Libraries",
 ]
 include = [
   "LICENSE.md",
