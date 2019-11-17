@@ -38,7 +38,7 @@ class Dysco:
             self.__stacklevel += 1
             del self[attribute]
         except KeyError as key_error:
-            raise AttributeError(key_error.args[0].replace('key', 'attribute', count=1))
+            raise AttributeError(key_error.args[0].replace('key', 'attribute', 1))
         finally:
             self.__stacklevel -= 1
             self.__stacklevel_lock.release()
