@@ -2,7 +2,7 @@
 import inspect
 from pickle import PickleError
 from threading import Lock
-from typing import Any, Hashable, Iterator, Tuple
+from typing import Any, Hashable, Iterator, Optional, Tuple
 
 from dysco.scope import Scope, find_parent_scope
 
@@ -14,10 +14,40 @@ class Dysco:
                 'Only one of the "readonly" and "shadow" options can be used at the same time.'
             )
 
+        self.__namespace = hex(id(self))
+
         self.__readonly = readonly
         self.__shadow = shadow
         self.__stacklevel = stacklevel
         self.__stacklevel_lock = Lock()
+
+    def __call__(
+        self,
+        readonly: Optional[bool] = None,
+        shadow: Optional[bool] = None,
+        stacklevel: Optional[int] = None,
+    ) -> 'Dysco':
+        if readonly and shadow:
+            raise ValueError(
+                'Only one of the "readonly" and "shadow" options can be used at the same time.'
+            )
+
+        # Override the options if necessary, and construct a new instance with them.
+        if readonly or shadow:
+            # Allow enabling one of these options without raising a value error in the init method.
+            readonly = bool(readonly)
+            shadow = not readonly
+        else:
+            # Otherwise pass through the existing values if new ones weren't given.
+            readonly = self.__readonly if readonly is None else readonly
+            shadow = self.__shadow if shadow is None else shadow
+        stacklevel = self.__stacklevel if stacklevel is None else stacklevel
+        dysco = Dysco(readonly=readonly, stacklevel=stacklevel)
+
+        # Override the instance's namespace to be the same as ours.
+        dysco.__namespace = self.__namespace
+
+        return dysco
 
     def __contains__(self, key: Hashable) -> bool:
         try:
@@ -56,7 +86,7 @@ class Dysco:
         current_frame = stack[0].frame
         stack = stack[self.__stacklevel :]
         try:
-            initial_scope = Scope(stack[0].frame, namespace=hex(id(self)))
+            initial_scope = Scope(stack[0].frame, namespace=self.__namespace)
             scope = initial_scope
             while scope:
                 if key in scope.variables:
@@ -95,7 +125,7 @@ class Dysco:
         current_frame = stack[0].frame
         stack = stack[self.__stacklevel :]
         try:
-            scope = Scope(stack[0].frame, namespace=hex(id(self)))
+            scope = Scope(stack[0].frame, namespace=self.__namespace)
             while scope:
                 if key in scope.variables:
                     return scope.variables[key]
@@ -110,7 +140,7 @@ class Dysco:
         current_frame = stack[0].frame
         stack = stack[self.__stacklevel :]
         try:
-            scope = Scope(stack[0].frame, namespace=hex(id(self)))
+            scope = Scope(stack[0].frame, namespace=self.__namespace)
             while scope:
                 for key_value_pair in scope.variables.items():
                     yield key_value_pair

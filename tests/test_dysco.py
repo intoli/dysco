@@ -21,6 +21,32 @@ async def test_async_functions():
     assert g.value == 2
 
 
+def test_calling_dysco_to_create_a_variant():
+    g.value = 1
+    readonly_g = g(readonly=True)
+
+    def check_access():
+        assert g.value == 1
+        assert readonly_g.value == 1
+
+        g.value = 2
+        assert readonly_g.value == 2
+        with pytest.raises(AttributeError):
+            readonly_g.value = 3
+
+        g.writeable_value = 4
+        readonly_g.readonly_value = 5
+
+    check_access()
+
+    assert g.value == 2
+    assert readonly_g.value == 2
+    assert 'writable_value' not in g
+    assert 'writable_value' not in readonly_g
+    assert 'readonly_value' not in g
+    assert 'readonly_value' not in readonly_g
+
+
 def test_contains():
     assert 'hi' not in g
     g['hi'] = True
