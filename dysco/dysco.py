@@ -8,8 +8,14 @@ from dysco.scope import Scope, find_parent_scope
 
 
 class Dysco:
-    def __init__(self, read_only: bool = False, stacklevel: int = 1):
+    def __init__(self, read_only: bool = False, shadow: bool = False, stacklevel: int = 1):
+        if read_only and shadow:
+            raise ValueError(
+                'Only one of the "read_only" and "shadow" options can be used at the same time.'
+            )
+
         self.__read_only = read_only
+        self.__shadow = shadow
         self.__stacklevel = stacklevel
         self.__stacklevel_lock = Lock()
 
@@ -141,10 +147,9 @@ class Dysco:
         try:
             initial_scope = Scope(stack[0].frame, namespace=hex(id(self)))
             scope = initial_scope
-            while scope:
+            while scope and not self.__shadow:
                 if key in scope.variables:
                     if scope is initial_scope or not self.__read_only:
-                        print('Setting', key, scope, initial_scope)
                         scope.variables[key] = value
                     else:
                         raise KeyError(
