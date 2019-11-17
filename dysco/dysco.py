@@ -1,5 +1,6 @@
 """Houses the implementation of the main ``Dysco`` class and project API."""
 import inspect
+from pickle import PickleError
 from threading import Lock
 from typing import Any, Hashable, Iterator, Tuple
 
@@ -111,6 +112,9 @@ class Dysco:
         finally:
             # Delete the current frame to avoid reference cycles.
             del current_frame
+
+    def __reduce__(self):
+        raise PickleError('Dysco cannot be pickled.')
 
     def __setattr__(self, attribute: str, value: Any) -> None:
         if attribute.startswith('_Dysco_'):
