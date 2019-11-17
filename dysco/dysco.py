@@ -14,6 +14,8 @@ class Dysco:
                 'Only one of the "readonly" and "shadow" options can be used at the same time.'
             )
 
+        self.__namespace = hex(id(self))
+
         self.__readonly = readonly
         self.__shadow = shadow
         self.__stacklevel = stacklevel
@@ -56,7 +58,7 @@ class Dysco:
         current_frame = stack[0].frame
         stack = stack[self.__stacklevel :]
         try:
-            initial_scope = Scope(stack[0].frame, namespace=hex(id(self)))
+            initial_scope = Scope(stack[0].frame, namespace=self.__namespace)
             scope = initial_scope
             while scope:
                 if key in scope.variables:
@@ -95,7 +97,7 @@ class Dysco:
         current_frame = stack[0].frame
         stack = stack[self.__stacklevel :]
         try:
-            scope = Scope(stack[0].frame, namespace=hex(id(self)))
+            scope = Scope(stack[0].frame, namespace=self.__namespace)
             while scope:
                 if key in scope.variables:
                     return scope.variables[key]
@@ -110,7 +112,7 @@ class Dysco:
         current_frame = stack[0].frame
         stack = stack[self.__stacklevel :]
         try:
-            scope = Scope(stack[0].frame, namespace=hex(id(self)))
+            scope = Scope(stack[0].frame, namespace=self.__namespace)
             while scope:
                 for key_value_pair in scope.variables.items():
                     yield key_value_pair
