@@ -2,7 +2,7 @@
 import inspect
 from pickle import PickleError
 from threading import Lock
-from typing import Any, Hashable, Iterator, Tuple
+from typing import Any, Hashable, Iterator, Optional, Tuple
 
 from dysco.scope import Scope, find_parent_scope
 
@@ -20,6 +20,19 @@ class Dysco:
         self.__shadow = shadow
         self.__stacklevel = stacklevel
         self.__stacklevel_lock = Lock()
+
+    def __call__(
+        self, readonly: Optional[bool] = None, stacklevel: Optional[int] = None
+    ) -> 'Dysco':
+        # Override the options if necessary, and construct a new instance with them.
+        readonly = self.__readonly if readonly is None else readonly
+        stacklevel = self.__stacklevel if stacklevel is None else stacklevel
+        dysco = Dysco(readonly=readonly, stacklevel=stacklevel)
+
+        # Override the instance's namespace to be the same as ours.
+        dysco.__namespace = self.__namespace
+
+        return dysco
 
     def __contains__(self, key: Hashable) -> bool:
         try:
