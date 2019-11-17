@@ -30,7 +30,7 @@
             alt="PyPI Version"></a>
 </p>
 
-###### [Installation](#installation) | [Development](#development) | [Contributing](#contributing)
+###### [Installation](#installation) | [How It Works](#how-it-works) | [Development](#development) | [Contributing](#contributing)
 
 > Dysco is a lightweight Python library that brings [dynamic scoping](https://en.wikipedia.org/wiki/Scope_(computer_science)#Dynamic_scoping) capabilities to Python in a highly configurable way.
 
@@ -46,6 +46,161 @@ pip install dysco
 # Or, installation with poetry.
 poetry add dysco
 ```
+
+## How It Works
+
+The basic mechanics are fairly simple.
+Python includes an [`inspect`](https://docs.python.org/3/library/inspect.html) module for reflection, and the [`inspect.stack()`](https://docs.python.org/3/library/inspect.html#inspect.stack) method makes it possible to access the full stack of frame records from the caller all the way up to the outermost call on the stack.
+Creating a mapping of variables, and associating it with the scope of a frame, allows us to climb up the stack whenever a variable is accessed to see if there are any variables with the same name defined in a higher scope.
+You can get fancy with the API and configurability, but a rough sketch of an implementation only takes a few lines of code.
+
+```python
+import inspect
+import weakref
+
+variables_by_frame_id = {}
+
+
+def get_variable(name):
+    # Exclude this frame we're in now from the stack.
+    stack = inspect.stack()[1:]
+
+    # Search up the stack for a matching variable.
+    for frame_info in stack:
+        variables = variables_by_frame_id.get(id(frame_info.frame))
+        if variables and name in variables:
+            return variables[name]
+
+    # Raise an excpetion if the variable wasn't found.
+    raise Exception(f'Variable "{name}" not found.')
+
+
+def set_variable(name, value):
+    # Exclude this frame we're in now from the stack.
+    stack = inspect.stack()[1:]
+
+    # Search up the stack for a matching variable.
+    for frame_info in stack:
+        variables = variables_by_frame_id.get(id(frame_info.frame))
+        if variables and name in variables:
+            variables[name] = value
+            return
+
+    # Insert it into the current scope if no matches were found.
+    frame_id = id(stack[0].frame)
+    variable_map_existed = frame_id in variables_by_frame_id
+    if variable_map_existed:
+        variables[name] = value
+    else:
+        variables_by_frame_id[frame_id] = {name: value}
+```
+
+This has roughly correct behavior, but the `variables_by_frame_id` accumulates more and more variable sets over time as variables get set in new execution frames.
+Frames are getting created and destroyed every time a new scope is entered or exited, but our `variables_by_frame_id` is never cleaned up.
+To make this code usable, we need to find a way to track the destruction of frames and remove any references to their corresponding variables so that they can be garbage collected.
+
+Python provides another useful and relevant module called [`weakref`](https://docs.python.org/3/library/weakref.html) that's designed for use cases like this.
+It includes a [`weakref.finalize()`](https://docs.python.org/3/library/weakref.html#weakref.finalize) function that can be used to register a callback that's fired when an object gets garbage collected.
+Adding something like
+
+```python
+    if not variable_map_existed:
+        weakref.finalize(
+            frame,
+            lambda frame_id: del variables_by_frame_id[frame_id],
+            frame_id,
+        )
+```
+
+to the end of our `set_variable()` method should, in principle, result in the lambda function being called with the frame ID after the frame no longer exists.
+The lambda function would then remove the corresponding variable map from `variables_by_frame_id`, and since this is the only reference to the variable map, the garbage collector would be free to clean up the variables as needed.
+There's just one problem with that...
+
+```
+TypeError: cannot create weak reference to 'frame' object
+```
+
+The `weakref.finalize()` method is just sugar on top of weak references, and Python doesn't support these for builtin types.
+This is presumably due to the overhead incurred by supporting weak references (*e.g.* needing to allocate space for an extra pointer in every instance).
+Maybe we could track one of the frame's attributes instead of the frame itself?
+Well, it turns out that all of the frame's attributes are either builtin types that similarly don't support weak references (`bytes`, `dict`, `int`, `str`) or objects that outlive the frame (`f_code`, `f_trace`).
+
+Only one of the frame attributes provides us with a glimmer of hope: `f_locals`, a dictionary representation of the variable namespace seen by the frame.
+This is the only attribute that is both mutable and owned by the frame, so it provides us with a potential opportunity to inject something that can be weakly referenced and used to trigger a callback when the frame is garbage collected.
+That said, the behavior of this dictionary is *interesting* to say the least.
+So much so that [PEP 558 -- Defined semantics for locals()](https://www.python.org/dev/peps/pep-0558/) was written to address some of its issues, "spooky action-at-a-distance" has been used on the [Python-Dev mailing list](https://mail.python.org/pipermail/python-dev/2019-May/157749.html) to describe some aspects of how it behaves, and the majority of the StackOverflow answers about it seem to be flat out wrong.
+
+Updating `f_locals` will sometimes update the local namespace, and it sometimes won't.
+Other times updating it will update the global namespace as well.
+Mutations to `f_locals` can be overwritten the next time the dictionary is synced, but they won't always.
+Oh, and using a debugger or a code coverage tool will also [change how it behaves](https://nedbatchelder.com/blog/201211/tricky_locals.html).
+And it should go without saying that it's implementation-specific, so let's not even get into anything outside of the [CPython](https://github.com/python/cpython) reference implementation.
+
+A lot of the weirdness around `f_locals` stems from the fact that CPython optimizes variable lookups whenever possible with what are called "fast locals."
+In function scopes, all of the local variable names are generally known once the code has been compiled to byte code.
+This allows CPython to index all of the variables that will be seen in the frame, and handle access by index rather than by name (*i.e* pointer arithmetic can be used instead of a hash table).
+The approach allows for dramatically faster code execution, but it means that fast locals need to be synced with `f_locals` for it to accurately represent the current state of the namespace.
+Throw in the facts that not all frames are optimized and that sometimes `f_locals` is the same object as `f_globals`, and, well, things can start seeming spooky pretty fast.
+
+The way that fast locals are synced to `f_locals` in CPython is the [`PyFrame_FastToLocalsWithError()`](https://github.com/python/cpython/blob/bed4817d52d7b5a383b1b61269c1337b61acc493/Objects/frameobject.c#L871) function.
+This method basically invokes [`map_to_dict()`](https://github.com/python/cpython/blob/bed4817d52d7b5a383b1b61269c1337b61acc493/Objects/frameobject.c#L786) with the "map" part being `frame.f_code.co_varnames`, `frame.f_code.co_cellvars`, or `frame.f_code.co_freevars`, and the "dict" part being `frame.f_locals`.
+It's not that important for the purpose of this discussion to know the difference between those three "map" parts, you can just think of them as a tuple containing the names of the variables in the local namespace.
+Looking at the implementation of `map_to_dict()`, we can see that only keys in `map` are even considered when updating the `f_locals` dictionary.
+
+```c
+static int
+map_to_dict(PyObject *map, Py_ssize_t nmap, PyObject *dict, PyObject **values,
+            int deref)
+{
+    Py_ssize_t j;
+    assert(PyTuple_Check(map));
+    assert(PyDict_Check(dict));
+    assert(PyTuple_Size(map) >= nmap);
+    for (j=0; j < nmap; j++) {
+        PyObject *key = PyTuple_GET_ITEM(map, j);
+        PyObject *value = values[j];
+        assert(PyUnicode_Check(key));
+        if (deref && value != NULL) {
+            assert(PyCell_Check(value));
+            value = PyCell_GET(value);
+        }
+        if (value == NULL) {
+            if (PyObject_DelItem(dict, key) != 0) {
+                if (PyErr_ExceptionMatches(PyExc_KeyError))
+                    PyErr_Clear();
+                else
+                    return -1;
+            }
+        }
+        else {
+            if (PyObject_SetItem(dict, key, value) != 0)
+                return -1;
+        }
+    }
+    return 0;
+}
+```
+
+That means that we can put whatever we want in there without needing to worry about it being deleted or overwritten the next time that `f_locals` is updated... as long as it doesn't collide with the name of a variable that's in the local scope.
+There's also the caveat that any variables we put in there actually *could* be written to the local scope if the code object isn't optimized.
+
+One of the many nice things about Python dictionaries is that their keys don't have to be strings.
+Any hashable type is supported as a dictionary key, so we can simply use any other hashable object as the key in order to completely eliminate the possibility of a collision with an actual variable name (in both the optimized and non-optimized cases).
+Sure, that violates the type definition of `f_locals`, but those are type *hints* not type *rules* 😈.
+
+This trick is the key piece of how Dysco works.
+Dysco stores all of the variables associated with a `dysco.dysco.Dysco` instance and a specific frame in a `dysco.scope.Scope` instance.
+The scope has a `scope.name` string that includes identifying information necessary to namespace everything, and then it wraps this in a tuple to use as a key when interacting with `f_locals` on a frame.
+The `Scope.__init__()` method includes code that looks something like this:
+
+```python
+        frame.f_locals[self.name_tuple] = self  # type: ignore
+        weakref.finalize(self, destructor, id(frame.f_locals), self.name)
+```
+
+No additional hard references to the scope are stored anywhere, so the scope is orphaned once `f_locals` is dereferenced and the corresponding destructor is called after the scope is garbage collected.
+The destructor unregisters the scope name from some local data structures that are used for faster scope lookups, and nothing is left hanging around in memory.
+The rest is just bookkeeping!
 
 ## Development
 
