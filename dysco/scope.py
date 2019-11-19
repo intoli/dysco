@@ -1,4 +1,3 @@
-import re
 import weakref
 from inspect import FrameInfo
 from types import FrameType
@@ -18,11 +17,8 @@ name_sets_by_frame_id: Dict[int, Set[str]] = {}
 
 
 def construct_name(frame: FrameType, namespace: str = '') -> str:
-    name: str = '_Dysco__'
-    if namespace:
-        name += re.sub(r'[^_a-zA-Z0-9]+', '_', namespace)
-    name += hex(id(frame.f_locals))
-    return name
+    hex_id: str = hex(id(frame.f_locals))
+    return f'<dysco.{hex_id}.{namespace}>'
 
 
 def destructor(frame_id: int, name: str):
@@ -35,7 +31,7 @@ def find_existing_scope(frame: FrameType, namespace: str = '') -> Optional['Scop
     for name in name_set:
         candidate_scope = scopes_by_name.get(name)
         if candidate_scope:
-            frame_scope = frame.f_locals.get(candidate_scope.name_tuple)  # type: ignore
+            frame_scope = frame.f_locals.get(candidate_scope.name)
             if candidate_scope is frame_scope and namespace == candidate_scope.namespace:
                 return candidate_scope
     return None
@@ -57,12 +53,11 @@ class Scope:
         self.initialized = True
 
         self.name = construct_name(frame, namespace)
-        self.name_tuple = (self.name,)
         self.namespace = namespace
         self.variables: Dict[Hashable, Any] = {}
 
         scopes_by_name[self.name] = self
-        frame.f_locals[self.name_tuple] = self  # type: ignore
+        frame.f_locals[self.name] = self
         name_set = name_sets_by_frame_id.get(id(frame.f_locals), set())
         name_set.add(self.name)
         name_sets_by_frame_id[id(frame.f_locals)] = name_set

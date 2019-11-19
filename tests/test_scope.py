@@ -4,13 +4,12 @@ import inspect
 from dysco.scope import Scope, find_parent_scope, scopes_by_name
 
 
-def test_f_local_keys_are_tuples():
+def test_f_local_keys_are_invalid_variable_names():
     frame = inspect.stack()[0].frame
-    assert not any(isinstance(key, tuple) for key in frame.f_locals.keys())
+    assert not any('<' in key for key in frame.f_locals.keys())
     Scope(frame)
-    [name_tuple] = [key for key in frame.f_locals.keys() if isinstance(key, tuple)]
-    assert len(name_tuple) == 1
-    assert name_tuple[0].startswith('_Dysco__')
+    [name] = [key for key in frame.f_locals.keys() if '<' in key]
+    assert name.startswith('<dysco.')
 
 
 def test_namespaces_produce_new_scopes():
