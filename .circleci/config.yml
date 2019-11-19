@@ -190,6 +190,71 @@ jobs:
           path: dist/docs
           destination: documentation
 
+  build-pypy-3.6:
+    <<: *defaults
+    docker:
+      - image: pypy:3.6-7.2.0-stretch
+
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - dysco-pypy-3.6-{{ .Branch }}-{{ .Revision }}
+            - dysco-pypy-3.6-{{ .Branch }}-
+            - dysco-pypy-3.6
+      - run:
+          name: Install Dependencies
+          no_output_timeout: 60m
+          command: |
+            pypy3 -m venv .venv
+            . .venv/bin/activate
+            pip install poetry==1.0.0b4
+
+            # Mypy can't install with PyPy because typed_ast is incompatible.
+            sed -i '/^mypy = /d' pyproject.toml
+
+            # Poetry install runs very slow in PyPy even when nothing gets updated.
+            # We store a hash of `poetry.lock` in the cache, and skip installation if it matches.
+            if md5sum -c poetry.lock.md5; then
+                echo "Skipping package installation because poetry.lcok.md5 hasn't changed."
+            else
+                poetry install
+                md5sum poetry.lock > poetry.lock.md5
+            fi
+      - save_cache:
+          key: dysco-pypy-3.6-{{ .Branch }}-{{ .Revision }}
+          paths:
+            - .venv
+            - poetry.lock.md5
+
+      - run:
+          name: Lint
+          no_output_timeout: 60m
+          command: |
+            . .venv/bin/activate
+            invoke lint --black --flake8 --isort
+
+      - run:
+          name: Test
+          no_output_timeout: 60m
+          command: |
+            . .venv/bin/activate
+            invoke test --coverage
+
+      - run:
+          name: Docs
+          no_output_timeout: 60m
+          command: |
+            . .venv/bin/activate
+            invoke docs
+
+      - store_artifacts:
+          path: htmlcov
+          destination: coverage-report
+
+      - store_artifacts:
+          path: dist/docs
+          destination: documentation
 
 workflows:
   version: 2
@@ -199,3 +264,4 @@ workflows:
       - build-3.8
       - build-3.7
       - build-3.6
+      - build-pypy-3.6

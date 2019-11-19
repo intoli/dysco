@@ -5,7 +5,10 @@ import pytest
 
 from dysco import Dysco, g
 
+skip_asyncio = version_info[0] <= 3 and version_info[1] <= 5
 
+
+@pytest.mark.skipif(skip_asyncio, reason='Pytest-asyncio is incompatible with Python 3.5.')
 @pytest.mark.asyncio
 async def test_async_functions():
     g.value = 1

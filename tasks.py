@@ -37,8 +37,9 @@ def docs(c):
         'mypy': 'Perform type checking using mypy.',
     }
 )
-def lint(c, all=True, black=True, flake8=False, isort=False, mypy=False):
+def lint(c, all=True, black=False, flake8=False, isort=False, mypy=False):
     """Run miscellaneous linting tasks."""
+    all = all and not black and not flake8 and not isort and not mypy
     if all or black:
         c.run('black --check --diff dysco tests')
     if all or isort:
